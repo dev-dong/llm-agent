@@ -69,6 +69,7 @@ async def chat_stream(request: ChatRequest):
         except ValueError as e:
             async def error_gen():
                 yield _sse({"type": "error", "message": str(e)})
+
             return StreamingResponse(error_gen(), media_type="text/event-stream")
 
     # MAX_HISTORY 초과 시 요약 트리거
@@ -82,9 +83,10 @@ async def chat_stream(request: ChatRequest):
         try:
             async for event in graph.astream_events(
                     AgentState(
-                        user_query=query,       # ← request.query → query 로 수정
+                        user_query=query,  # ← request.query → query 로 수정
+                        router_query=request.query,
                         history=history,
-                        summary=summary,
+                        summary=summary
                     ),
                     version="v2",
             ):
