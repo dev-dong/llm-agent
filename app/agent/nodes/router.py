@@ -7,17 +7,27 @@ from app.core.llm import LLMFactory
 logger = logging.getLogger(__name__)
 
 
+def _build_history(history: list[dict]) -> list:
+    result = []
+    for item in history:
+        if item.get("role") == "user":
+            result.append(HumanMessage(content=item["content"]))
+        elif item.get("role") == "assistant":
+            result.append(AIMessage(content=item["content"]))
+    return result
+
+
 async def router_node(state: AgentState) -> dict:
     logger.info("[Router] 시작 | query=%.50s", state.user_query)
 
     llm = LLMFactory.get_general_llm()
-
     chain = ROUTER_PROMPT | llm.with_structured_output(RouterDecision)
 
     try:
-        decision: RouterDecision = await chain.ainvoke(
-            {"user_query": state.user_query}
-        )
+        decision: RouterDecision = await chain.ainvoke({
+            "user_query": state.user_query,
+            "history": _build_history(state.history),
+        })
         logger.info("[Router] 결정 | route=%s", decision.route)
 
         return {
@@ -25,13 +35,14 @@ async def router_node(state: AgentState) -> dict:
             "routing_reason": decision.reason,
             "messages": [
                 HumanMessage(content=state.user_query),
-                AIMessage(content=f"[라우터] {decision.reason} -> {decision.route}")
-            ]
+                AIMessage(content=f"[라우터] {decision.reason} → {decision.route}"),
+            ],
         }
+
     except Exception as e:
         logger.error("[Router] 실패: %s", e)
         return {
             "route": "dev_qa",
             "routing_reason": f"라우팅 실패, dev_qa로 폴백: {e}",
-            "error": str(e)
+            "error": str(e),
         }

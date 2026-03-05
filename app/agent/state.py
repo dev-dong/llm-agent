@@ -9,6 +9,7 @@ NodeType = Literal["code", "infra", "dev_qa", "unknown"]
 class AgentState(BaseModel):
     messages: Annotated[list[BaseMessage], add_messages] = Field(default_factory=list)
     user_query: str = Field(default="")
+    history: list[dict] = Field(default_factory=list)
     route: NodeType = Field(default="unknown")
     routing_reason: str = Field(default="")
     final_answer: str = Field(default="")

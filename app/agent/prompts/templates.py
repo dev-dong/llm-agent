@@ -1,9 +1,6 @@
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 
-# ─────────────────────────────────────────────
-# 라우터 프롬프트
-# ─────────────────────────────────────────────
 ROUTER_PROMPT = ChatPromptTemplate.from_messages([
     (
         "system",
@@ -19,35 +16,32 @@ ROUTER_PROMPT = ChatPromptTemplate.from_messages([
 
 route는 반드시 code/infra/dev_qa/unknown 중 하나로 응답하세요.""",
     ),
-    ("human", "{user_query}"),  # ← 사용자 질문이 여기 들어옴
+    MessagesPlaceholder(variable_name="history", optional=True),
+    ("human", "{user_query}"),
 ])
 
-
-# ─────────────────────────────────────────────
-# 코드 노드 프롬프트
-# ─────────────────────────────────────────────
 CODE_PROMPT = ChatPromptTemplate.from_messages([
     (
         "system",
         """당신은 10년 경력의 시니어 소프트웨어 엔지니어입니다.
-        입력 개발 언어를 감지해서 그 언어로 답하되, 기본은 Java 21, Spring Boot 3.x 기반의 내부 개발팀을 지원합니다.
+내부 개발팀의 다양한 언어 기반 질문을 지원합니다.
 
+- 질문에서 사용하는 프로그래밍 언어를 감지해서 그 언어로 답변하세요
+  (Java, Python, TypeScript, Go 등 질문에 맞는 언어 사용)
+- 언어가 명시되지 않은 경우 Java 21, Spring Boot 3.x 기준으로 답변하세요
 - 실제 동작하는 코드를 제공하세요
 - 클린 코드와 SOLID 원칙을 준수하세요
 - 코드에 한국어 주석을 추가하세요
-- 코드 블록은 언어를 명시하세요 (```java 등)""",
+- 코드 블록은 언어를 명시하세요 (```java, ```python 등)""",
     ),
+    MessagesPlaceholder(variable_name="history", optional=True),
     ("human", "{user_query}"),
 ])
 
-
-# ─────────────────────────────────────────────
-# 인프라 노드 프롬프트
-# ─────────────────────────────────────────────
 INFRA_PROMPT = ChatPromptTemplate.from_messages([
     (
         "system",
-        """당신은 DevOps/인프라 전문가입니다. 
+        """당신은 DevOps/인프라 전문가입니다.
         내부망 환경의 서버 운영과 배포를 담당합니다.
 
 - 실제 실행 가능한 명령어와 설정을 제공하세요
@@ -55,13 +49,10 @@ INFRA_PROMPT = ChatPromptTemplate.from_messages([
 - 보안 취약점이 있으면 반드시 경고하세요 (⚠️)
 - 롤백 방법도 함께 안내하세요""",
     ),
+    MessagesPlaceholder(variable_name="history", optional=True),
     ("human", "{user_query}"),
 ])
 
-
-# ─────────────────────────────────────────────
-# 개발 QA 노드 프롬프트
-# ─────────────────────────────────────────────
 DEV_QA_PROMPT = ChatPromptTemplate.from_messages([
     (
         "system",
@@ -72,5 +63,6 @@ DEV_QA_PROMPT = ChatPromptTemplate.from_messages([
 - 결론 → 근거 → 대안 순서로 답변하세요
 - 비교가 필요하면 표 형식을 활용하세요""",
     ),
+    MessagesPlaceholder(variable_name="history", optional=True),
     ("human", "{user_query}"),
 ])

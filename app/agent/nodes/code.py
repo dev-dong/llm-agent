@@ -1,10 +1,20 @@
 import logging
-from langchain_core.messages import AIMessage
+from langchain_core.messages import HumanMessage, AIMessage
 from app.agent.state import AgentState
 from app.agent.prompts.templates import CODE_PROMPT
 from app.core.llm import LLMFactory
 
 logger = logging.getLogger(__name__)
+
+
+def _build_history(history: list[dict]) -> list:
+    result = []
+    for item in history:
+        if item.get("role") == "user":
+            result.append(HumanMessage(content=item["content"]))
+        elif item.get("role") == "assistant":
+            result.append(AIMessage(content=item["content"]))
+    return result
 
 
 async def code_node(state: AgentState) -> dict:
@@ -13,17 +23,15 @@ async def code_node(state: AgentState) -> dict:
     chain = CODE_PROMPT | LLMFactory.get_code_llm()
 
     try:
-        response = await chain.ainvoke({"user_query": state.user_query})
+        response = await chain.ainvoke({
+            "user_query": state.user_query,
+            "history": _build_history(state.history),
+        })
         logger.info("[Code] 완료 | length=%d", len(response.content))
-
         return {
             "final_answer": response.content,
             "messages": [AIMessage(content=response.content, name="code_expert")],
         }
-
     except Exception as e:
         logger.error("[Code] 실패: %s", e)
-        return {
-            "final_answer": f"코드 노드 오류: {e}",
-            "error": str(e),
-        }
+        return {"final_answer": f"코드 노드 오류: {e}", "error": str(e)}
