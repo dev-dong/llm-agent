@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: llm-agent
+Version: 0.1.0
+Summary: 내부망 LLM Agent - FastAPI + LangGraph + Ollama
+Requires-Python: >=3.13
+Requires-Dist: fastapi>=0.133.1
+Requires-Dist: uvicorn[standard]>=0.41.0
+Requires-Dist: langgraph>=1.0.9
+Requires-Dist: langchain>=1.2.10
+Requires-Dist: langchain-core>=1.2.16
+Requires-Dist: langchain-ollama>=1.0.1
+Requires-Dist: pydantic>=2.12.5
+Requires-Dist: pydantic-settings>=2.13.1
+Requires-Dist: python-dotenv>=1.2.1
+Requires-Dist: httpx>=0.28.1
+Requires-Dist: sse-starlette>=3.2.0
