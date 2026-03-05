@@ -12,6 +12,7 @@ class ChatRequest(BaseModel):
     query: str = Field(min_length=1, max_length=10000)
     history: list[MessageItem] = Field(default_factory=list)
     summary: str = Field(default="", description="이전 대화 요약본")
+    file_path: str = Field(default="", description="리뷰할 파일 경로 (선택)")
 
 
 class RouteInfo(BaseModel):

@@ -567,7 +567,30 @@
         </div>
     </div>
 
+
     <div class="input-section">
+        <!-- query textarea 위에 추가 -->
+        <div>
+            <div class="section-label" style="margin-bottom:8px;">file path (optional)</div>
+            <input
+                    id="filePathInput"
+                    type="text"
+                    placeholder="C:\project\src\UserService.java"
+                    style="
+            width: 100%;
+            background: var(--gray2);
+            border: 1px solid var(--gray3);
+            border-radius: 6px;
+            color: var(--white);
+            font-family: var(--mono);
+            font-size: 11px;
+            padding: 8px 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        "
+            />
+        </div>
+
         <div class="section-label">query</div>
         <textarea id="queryInput"
                   placeholder="질문을 입력하세요...&#10;&#10;예) JPA N+1 문제 해결법&#10;예) Docker 메모리 설정&#10;예) MSA 설계 어떻게 해?"
@@ -682,13 +705,15 @@
         let detectedRoute = null;
 
         try {
+            const filePath = document.getElementById('filePathInput').value.trim();
             const response = await fetch(`${API_BASE}/api/v1/chat/stream`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     query,
                     history: conversationHistory,
-                    summary: conversationSummary
+                    summary: conversationSummary,
+                    file_path: filePath
                 }),
             });
 
