@@ -13,6 +13,7 @@ ROUTER_PROMPT = ChatPromptTemplate.from_messages([
 | 인프라/운영 | infra | Docker, K8s, CI/CD, 서버 설정, 네트워크, 배포 |
 | 개발 QA | dev_qa | 설계 리뷰, 테스트 전략, 아키텍처, 기술 비교 |
 | 판단 불가 | unknown | 위 분야에 명확히 속하지 않는 경우 |
+| 일상 대화 | unknown | 감사, 인사, 칭찬 등 개발과 무관한 말 |
 
 route는 반드시 code/infra/dev_qa/unknown 중 하나로 응답하세요.""",
     ),

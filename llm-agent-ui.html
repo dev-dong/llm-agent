@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Code Analyzer</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=IBM+Plex+Sans+KR:wght@300;400;600;700&display=swap"
+          rel="stylesheet">
+    <style>
+        :root {
+            --black: #0a0a0a;
+            --gray1: #111111;
+            --gray2: #1a1a1a;
+            --gray3: #252525;
+            --gray4: #333333;
+            --gray5: #555555;
+            --gray6: #888888;
+            --white: #f0f0f0;
+            --lime: #c8f135;
+            --red: #ff4d4d;
+            --blue: #4d9fff;
+            --mono: 'IBM Plex Mono', monospace;
+            --sans: 'IBM Plex Sans KR', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--sans);
+            background: var(--black);
+            color: var(--white);
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            grid-template-rows: 52px 1fr;
+            overflow: hidden;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            background: var(--gray1);
+            border-bottom: 1px solid var(--gray3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .logo {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--lime);
+            letter-spacing: 0.08em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--lime);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.4;
+                transform: scale(0.8);
+            }
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 라우트 배지 */
+        .route-badge {
+            font-family: var(--mono);
+            font-size: 10px;
+            background: var(--gray2);
+            border: 1px solid var(--gray4);
+            border-radius: 3px;
+            padding: 3px 10px;
+            letter-spacing: 0.06em;
+            display: none;
+        }
+
+        .route-badge.code {
+            color: var(--lime);
+            border-color: rgba(200, 241, 53, 0.3);
+            display: inline;
+        }
+
+        .route-badge.infra {
+            color: var(--blue);
+            border-color: rgba(77, 159, 255, 0.3);
+            display: inline;
+        }
+
+        .route-badge.dev_qa {
+            color: #ff9f4d;
+            border-color: rgba(255, 159, 77, 0.3);
+            display: inline;
+        }
+
+        .status-badge {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--gray6);
+            background: var(--gray2);
+            border: 1px solid var(--gray4);
+            border-radius: 3px;
+            padding: 3px 10px;
+            letter-spacing: 0.06em;
+        }
+
+        .status-badge.ok {
+            color: var(--lime);
+            border-color: rgba(200, 241, 53, 0.3);
+        }
+
+        .status-badge.error {
+            color: var(--red);
+            border-color: rgba(255, 77, 77, 0.3);
+        }
+
+        .btn-reset {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--gray6);
+            background: transparent;
+            border: 1px solid var(--gray4);
+            border-radius: 3px;
+            padding: 4px 12px;
+            cursor: pointer;
+            letter-spacing: 0.06em;
+            transition: all 0.15s;
+        }
+
+        .btn-reset:hover {
+            color: var(--red);
+            border-color: var(--red);
+        }
+
+        .panel-left {
+            background: var(--gray1);
+            border-right: 1px solid var(--gray3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-section {
+            padding: 16px;
+            border-bottom: 1px solid var(--gray3);
+        }
+
+        .section-label {
+            font-family: var(--mono);
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--gray5);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        /* 라우터 안내 */
+        .route-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .route-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--gray5);
+        }
+
+        .route-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .input-section {
+            flex: 1;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow: hidden;
+        }
+
+        textarea {
+            flex: 1;
+            width: 100%;
+            background: var(--gray2);
+            border: 1px solid var(--gray3);
+            border-radius: 6px;
+            color: var(--white);
+            font-family: var(--mono);
+            font-size: 13px;
+            line-height: 1.7;
+            padding: 14px;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea::placeholder {
+            color: var(--gray5);
+        }
+
+        textarea:focus {
+            border-color: var(--gray5);
+        }
+
+        .quick-triggers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .trigger-btn {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--gray6);
+            background: var(--gray2);
+            border: 1px solid var(--gray4);
+            border-radius: 3px;
+            padding: 4px 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .trigger-btn:hover {
+            color: var(--lime);
+            border-color: rgba(200, 241, 53, 0.4);
+            background: rgba(200, 241, 53, 0.05);
+        }
+
+        .btn-send {
+            width: 100%;
+            padding: 13px;
+            background: var(--lime);
+            color: var(--black);
+            border: none;
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-send:hover:not(:disabled) {
+            background: #d4f54a;
+            transform: translateY(-1px);
+        }
+
+        .btn-send:disabled {
+            background: var(--gray4);
+            color: var(--gray6);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .panel-right {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--black);
+        }
+
+        .response-header {
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--gray3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--gray1);
+            flex-shrink: 0;
+        }
+
+        .response-title {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--gray5);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .reflection-indicator {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--gray6);
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .reflection-indicator.active {
+            display: flex;
+            color: var(--lime);
+        }
+
+        .reflection-spinner {
+            width: 8px;
+            height: 8px;
+            border: 1.5px solid rgba(200, 241, 53, 0.3);
+            border-top-color: var(--lime);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: var(--gray4);
+            border-radius: 4px;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            animation: msgIn 0.3s ease-out;
+        }
+
+        @keyframes msgIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-meta {
+            font-family: var(--mono);
+            font-size: 9px;
+            color: var(--gray5);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .message-meta.user {
+            color: var(--lime);
+        }
+
+        /* 라우트 태그 (메시지 안) */
+        .route-tag {
+            font-family: var(--mono);
+            font-size: 9px;
+            padding: 1px 6px;
+            border-radius: 2px;
+            letter-spacing: 0.08em;
+        }
+
+        .route-tag.code {
+            background: rgba(200, 241, 53, 0.1);
+            color: var(--lime);
+        }
+
+        .route-tag.infra {
+            background: rgba(77, 159, 255, 0.1);
+            color: var(--blue);
+        }
+
+        .route-tag.dev_qa {
+            background: rgba(255, 159, 77, 0.1);
+            color: #ff9f4d;
+        }
+
+        .message-body {
+            background: var(--gray1);
+            border: 1px solid var(--gray3);
+            border-radius: 8px;
+            padding: 16px 20px;
+            font-size: 14px;
+            line-height: 1.75;
+        }
+
+        .message.user .message-body {
+            background: var(--gray2);
+            border-color: var(--gray4);
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--white);
+        }
+
+        .message-body h1, .message-body h2, .message-body h3 {
+            font-family: var(--sans);
+            margin: 1.2em 0 0.5em;
+            line-height: 1.3;
+        }
+
+        .message-body h2 {
+            font-size: 1.15em;
+            color: var(--lime);
+        }
+
+        .message-body h3 {
+            font-size: 1.0em;
+            color: #aaa;
+        }
+
+        .message-body p {
+            margin: 0.7em 0;
+        }
+
+        .message-body strong {
+            color: var(--lime);
+        }
+
+        .message-body code {
+            font-family: var(--mono);
+            font-size: 0.85em;
+            background: var(--gray3);
+            padding: 2px 7px;
+            border-radius: 3px;
+            color: #b8f76e;
+        }
+
+        .message-body pre {
+            margin: 1em 0;
+            padding: 16px;
+            background: var(--gray1) !important;
+            border: 1px solid var(--gray3);
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+
+        .message-body pre code {
+            background: transparent;
+            padding: 0;
+            color: var(--white);
+            font-size: 12.5px;
+        }
+
+        .message-body ul, .message-body ol {
+            margin: 0.7em 0 0.7em 1.4em;
+        }
+
+        .message-body li {
+            margin: 0.3em 0;
+        }
+
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: var(--gray5);
+            font-family: var(--mono);
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 32px;
+            opacity: 0.3;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 9px;
+            height: 16px;
+            background: var(--lime);
+            vertical-align: text-bottom;
+            border-radius: 1px;
+            animation: blink 1s step-end infinite;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">AI CODE ANALYZER</div>
+    <div class="header-actions">
+        <span id="routeBadge" class="route-badge"></span>
+        <button class="btn-reset" onclick="resetConversation()">RESET</button>
+    </div>
+</header>
+
+<div class="panel-left">
+    <!-- 라우터 안내 -->
+    <div class="panel-section">
+        <div class="section-label">auto routing</div>
+        <div class="route-info">
+            <div class="route-item">
+                <div class="route-dot" style="background:var(--lime)"></div>
+                <span>code — 코드 작성 · 디버깅 · 알고리즘</span>
+            </div>
+            <div class="route-item">
+                <div class="route-dot" style="background:var(--blue)"></div>
+                <span>infra — Docker · K8s · CI/CD · 배포</span>
+            </div>
+            <div class="route-item">
+                <div class="route-dot" style="background:#ff9f4d"></div>
+                <span>dev_qa — 설계 · 리뷰 · 아키텍처</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-section">
+        <div class="section-label">query</div>
+        <textarea id="queryInput"
+                  placeholder="질문을 입력하세요...&#10;&#10;예) JPA N+1 문제 해결법&#10;예) Docker 메모리 설정&#10;예) MSA 설계 어떻게 해?"
+        ></textarea>
+
+        <div>
+            <div class="section-label" style="margin-bottom:8px;">quick triggers</div>
+            <div class="quick-triggers">
+                <button class="trigger-btn" onclick="insertTrigger('다시 생각해줘')">다시 생각해줘</button>
+                <button class="trigger-btn" onclick="insertTrigger('빠진거 없어?')">빠진거 없어?</button>
+                <button class="trigger-btn" onclick="insertTrigger('더 자세히')">더 자세히</button>
+                <button class="trigger-btn" onclick="insertTrigger('이상한데')">이상한데</button>
+            </div>
+        </div>
+
+        <button class="btn-send" id="sendBtn" onclick="sendMessage()">
+            ▶ SEND
+        </button>
+    </div>
+</div>
+
+<div class="panel-right">
+    <div class="response-header">
+        <span class="response-title">conversation</span>
+        <div class="reflection-indicator" id="reflectionIndicator">
+            <div class="reflection-spinner"></div>
+            PROCESSING...
+        </div>
+    </div>
+
+    <div class="messages" id="messages">
+        <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon">⚡</div>
+            <div>질문을 입력하면 대화가 시작됩니다</div>
+            <div style="color:var(--gray5);font-size:10px;margin-top:4px;">
+                powered by qwen2.5-coder:14b · lfm2:24b
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:8000';
+    let isStreaming = false;
+    let conversationHistory = [];  // 멀티턴 대화 기록
+    let conversationSummary = '';
+
+    marked.setOptions({breaks: true, gfm: true});
+
+    // ─── 헬퍼 ─────────────────────────────────────
+    function insertTrigger(text) {
+        const el = document.getElementById('queryInput');
+        el.value = text;
+        el.focus();
+    }
+
+    function escapeHtml(text) {
+        return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function scrollToBottom() {
+        const el = document.getElementById('messages');
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function addMessage(role, content, routeTag = null) {
+        const container = document.getElementById('messages');
+        const time = new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit'});
+
+        const routeTagHtml = routeTag
+            ? `<span class="route-tag ${routeTag}">${routeTag}</span>`
+            : '';
+
+        const div = document.createElement('div');
+        div.className = `message ${role}`;
+        div.innerHTML = `
+    <div class="message-meta ${role}">
+      ${role === 'user' ? 'YOU' : 'AI'} · ${time} ${routeTagHtml}
+    </div>
+    <div class="message-body">${role === 'user' ? escapeHtml(content) : content}</div>
+  `;
+        container.appendChild(div);
+        scrollToBottom();
+        return div;
+    }
+
+    // ─── 라우트 배지 업데이트 ─────────────────────
+    function updateRouteBadge(route) {
+        const el = document.getElementById('routeBadge');
+        const labels = {code: '⬡ CODE', infra: '⬡ INFRA', dev_qa: '⬡ DEV QA'};
+        el.textContent = labels[route] || '';
+        el.className = `route-badge ${route}`;
+    }
+
+    // ─── 메시지 전송 ──────────────────────────────
+    async function sendMessage() {
+        const query = document.getElementById('queryInput').value.trim();
+        if (!query || isStreaming) return;
+
+        isStreaming = true;
+        document.getElementById('sendBtn').disabled = true;
+        document.getElementById('emptyState')?.remove();
+        document.getElementById('reflectionIndicator').className = 'reflection-indicator active';
+
+        addMessage('user', query);
+        document.getElementById('queryInput').value = '';
+
+        const aiMsgEl = addMessage('ai', '');
+        const bodyEl = aiMsgEl.querySelector('.message-body');
+        const metaEl = aiMsgEl.querySelector('.message-meta');
+        let accumulated = '';
+        let detectedRoute = null;
+
+        try {
+            const response = await fetch(`${API_BASE}/api/v1/chat/stream`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    query,
+                    history: conversationHistory,
+                    summary: conversationSummary
+                }),
+            });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const {done, value} = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, {stream: true});
+                const parts = buffer.split(/\r?\n\r?\n/);
+                buffer = parts.pop();
+
+                for (const evt of parts) {
+                    const line = evt.split(/\r?\n/)
+                        .find(l => l.startsWith('data:'));
+                    if (!line) continue;
+
+                    const raw = line.slice(5).trim();
+                    try {
+                        const parsed = JSON.parse(raw);
+
+                        // 라우팅 완료 이벤트
+                        if (parsed.type === 'route' && parsed.route) {
+                            detectedRoute = parsed.route;
+                            updateRouteBadge(parsed.route);
+                            // 메타에 라우트 태그 추가
+                            metaEl.innerHTML = `AI · ${new Date().toLocaleTimeString('ko-KR', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })} <span class="route-tag ${parsed.route}">${parsed.route}</span>`;
+                        }
+
+                        // 토큰 스트리밍
+                        else if (parsed.type === 'token' && parsed.content) {
+                            accumulated += parsed.content;
+                            bodyEl.innerHTML = marked.parse(accumulated) + '<span class="cursor"></span>';
+                            bodyEl.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+                            scrollToBottom();
+                        }
+
+                        // 완료
+                        else if (parsed.type === 'done') {
+                            bodyEl.innerHTML = marked.parse(accumulated);
+                            bodyEl.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+                            // history 추가
+                            conversationHistory.push({role: 'user', content: query});
+                            conversationHistory.push({role: 'assistant', content: accumulated});
+                            if (parsed.summary) conversationSummary = parsed.summary;
+                        }
+
+                        // 에러
+                        else if (parsed.type === 'error') {
+                            throw new Error(parsed.message);
+                        }
+
+                    } catch (parseErr) {
+                        // JSON 파싱 실패 시 텍스트 그대로 누적
+                        if (raw && raw !== '[DONE]') {
+                            accumulated += raw;
+                            bodyEl.innerHTML = marked.parse(accumulated) + '<span class="cursor"></span>';
+                            scrollToBottom();
+                        }
+                    }
+                }
+            }
+
+            // 최종 렌더링
+            bodyEl.innerHTML = marked.parse(accumulated || '응답을 받지 못했습니다.');
+            bodyEl.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+
+        } catch (err) {
+            bodyEl.innerHTML = `<span style="color:var(--red);font-family:var(--mono);font-size:12px;">// error: ${err.message}</span>`;
+        } finally {
+            isStreaming = false;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('reflectionIndicator').className = 'reflection-indicator';
+            scrollToBottom();
+        }
+    }
+
+    // ─── 대화 초기화 ──────────────────────────────
+    function resetConversation() {
+        conversationHistory = [];  // 히스토리 초기화
+        conversationSummary = '';
+        document.getElementById('messages').innerHTML = `
+    <div class="empty-state" id="emptyState">
+      <div class="empty-state-icon">⚡</div>
+      <div>대화가 초기화되었습니다</div>
+      <div style="color:var(--gray5);font-size:10px;margin-top:4px;">powered by qwen2.5-coder:14b · lfm2:24b</div>
+    </div>
+  `;
+        document.getElementById('routeBadge').className = 'route-badge';
+        document.getElementById('routeBadge').textContent = '';
+    }
+
+    // ─── 엔터키 전송 ──────────────────────────────
+    document.getElementById('queryInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+</script>
+</body>
+</html>

@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     # Agent 설정
     max_tokens: int = 4096
     temperature: float = 0.2
+    max_history: int = 10 # <- 최근 10개 메시지만 유지
 
 
 @lru_cache

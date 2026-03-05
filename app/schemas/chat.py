@@ -10,10 +10,8 @@ class MessageItem(BaseModel):
 
 class ChatRequest(BaseModel):
     query: str = Field(min_length=1, max_length=10000)
-    history: list[MessageItem] = Field(
-        default_factory=list,
-        description="이전 대화 기록 (Client가 관리)"
-    )
+    history: list[MessageItem] = Field(default_factory=list)
+    summary: str = Field(default="", description="이전 대화 요약본")
 
 
 class RouteInfo(BaseModel):
@@ -25,3 +23,4 @@ class ChatResponse(BaseModel):
     answer: str
     route: RouteInfo
     has_error: bool = False
+    summary: str = ""
