@@ -5,12 +5,12 @@ from pathlib import Path
 
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
-from langchain_ollama import ChatOllama
 
-from app.core.config import get_settings
-from app.schemas.chat import ChatRequest
 from app.agent.graph import get_graph
 from app.agent.state import AgentState
+from app.core.config import get_settings
+from app.core.llm import LLMFactory
+from app.schemas.chat import ChatRequest
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -28,13 +28,7 @@ def _read_file_sync(file_path: str) -> str:
 
 
 async def _summarize(history: list[dict], current_summary: str) -> str:
-    settings = get_settings()
-    llm = ChatOllama(
-        model=settings.general_model,
-        base_url=settings.ollama_base_url,
-        temperature=0.1,
-        num_predict=500,
-    )
+    llm = LLMFactory.get_general_llm()
     history_text = "\n".join(
         f"{item['role'].upper()}: {item['content'][:200]}"
         for item in history

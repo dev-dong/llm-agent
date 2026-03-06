@@ -18,10 +18,3 @@ class ChatRequest(BaseModel):
 class RouteInfo(BaseModel):
     selected: str
     reason: str
-
-
-class ChatResponse(BaseModel):
-    answer: str
-    route: RouteInfo
-    has_error: bool = False
-    summary: str = ""
