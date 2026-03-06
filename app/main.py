@@ -1,10 +1,14 @@
 import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.config import get_settings
-from app.api.routes import chat
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
 from app.agent.graph import get_graph
+from app.api.routes import chat
+from app.core.config import get_settings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -47,6 +51,11 @@ def create_app() -> FastAPI:
     )
 
     fast_api_app.include_router(chat.router, prefix="/api/v1")
+    fast_api_app.mount("/static", StaticFiles(directory="."), name="static")
+
+    @fast_api_app.get("/")
+    async def serve_ui():
+        return FileResponse("llm-agent-ui.html")
 
     return fast_api_app
 

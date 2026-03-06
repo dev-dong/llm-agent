@@ -535,6 +535,109 @@
                 opacity: 0;
             }
         }
+
+        /* ─── 모바일 반응형 ───────────────────────── */
+        @media (max-width: 768px) {
+            body {
+                grid-template-columns: 1fr;
+                grid-template-rows: 52px 1fr auto;
+                height: 100dvh; /* 모바일 주소창 높이 대응 */
+            }
+
+            /* 대화창을 위로 */
+            .panel-right {
+                grid-row: 2;
+                grid-column: 1;
+            }
+
+            /* 입력창을 아래 고정 */
+            .panel-left {
+                grid-row: 3;
+                grid-column: 1;
+                border-right: none;
+                border-top: 1px solid var(--gray3);
+                max-height: 55vh;
+                overflow-y: auto;
+            }
+
+            /* 라우터 안내 패널 모바일에서 숨김 (공간 절약) */
+            .panel-section {
+                display: none;
+            }
+
+            /* 입력 영역 패딩 줄이기 */
+            .input-section {
+                padding: 12px;
+                gap: 8px;
+            }
+
+            /* 텍스트에어리어 고정 높이 */
+            textarea {
+                flex: none;
+                min-height: 80px;
+                max-height: 140px;
+                font-size: 16px; /* iOS 자동 줌 방지 */
+            }
+
+            /* 파일 경로 인풋 폰트 크기 */
+            #filePathInput {
+                font-size: 16px !important; /* iOS 자동 줌 방지 */
+            }
+
+            /* 퀵 트리거 가로 스크롤 */
+            .quick-triggers {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 4px;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .quick-triggers::-webkit-scrollbar {
+                display: none;
+            }
+
+            .trigger-btn {
+                flex-shrink: 0;
+                padding: 6px 14px;
+                font-size: 11px;
+            }
+
+            /* 전송 버튼 */
+            .btn-send {
+                padding: 14px;
+                font-size: 13px;
+            }
+
+            /* 메시지 패딩 */
+            .messages {
+                padding: 16px 12px;
+                gap: 14px;
+            }
+
+            .message-body {
+                padding: 12px 14px;
+                font-size: 13px;
+            }
+
+            /* 코드 블록 폰트 크기 */
+            .message-body pre code {
+                font-size: 11px;
+            }
+
+            /* 헤더 패딩 */
+            header {
+                padding: 0 14px;
+            }
+
+            .logo {
+                font-size: 11px;
+            }
+
+            /* response-header 숨김 (공간 절약) */
+            .response-header {
+                padding: 8px 14px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -640,7 +743,7 @@
 </div>
 
 <script>
-    const API_BASE = 'http://localhost:8000';
+    const API_BASE = `${window.location.protocol}//${window.location.host}`;
     let isStreaming = false;
     let conversationHistory = [];  // 멀티턴 대화 기록
     let conversationSummary = '';
