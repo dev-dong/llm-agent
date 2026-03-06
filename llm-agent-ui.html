@@ -569,7 +569,6 @@
 
 
     <div class="input-section">
-        <!-- query textarea 위에 추가 -->
         <div>
             <div class="section-label" style="margin-bottom:8px;">file path (optional)</div>
             <input
@@ -589,6 +588,14 @@
             transition: border-color 0.2s;
         "
             />
+            <!-- ↓ 추가 -->
+            <div id="fileAttachBadge" style="
+        display: none;
+        margin-top: 6px;
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--lime);
+"></div>
         </div>
 
         <div class="section-label">query</div>
@@ -795,6 +802,8 @@
             isStreaming = false;
             document.getElementById('sendBtn').disabled = false;
             document.getElementById('reflectionIndicator').className = 'reflection-indicator';
+            document.getElementById('filePathInput').value = '';
+            document.getElementById('fileAttachBadge').style.display = 'none';
             scrollToBottom();
         }
     }
@@ -819,6 +828,19 @@
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             sendMessage();
+        }
+    });
+
+    // ─── 파일 경로 입력 시 배지 표시 ──────────────
+    document.getElementById('filePathInput').addEventListener('input', e => {
+        const badge = document.getElementById('fileAttachBadge');
+        const val = e.target.value.trim();
+        if (val) {
+            const fileName = val.split(/[\\/]/).pop(); // 경로에서 파일명만 추출
+            badge.textContent = `📎 ${fileName}`;
+            badge.style.display = 'block';
+        } else {
+            badge.style.display = 'none';
         }
     });
 </script>
