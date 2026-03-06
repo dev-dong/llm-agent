@@ -86,3 +86,14 @@ DEV_QA_PROMPT = ChatPromptTemplate.from_messages([
     MessagesPlaceholder(variable_name="history", optional=True),
     ("human", "{user_query}")
 ])
+
+UNKNOWN_PROMPT = ChatPromptTemplate.from_messages([
+    (
+        "system",
+        """당신은 개발팀 내부 AI 어시스턴트입니다.
+개발과 무관한 질문이나 잡담에는 친근하게 짧게 답변하세요.
+단, 대화 말미에 자연스럽게 개발 관련 도움을 제안하세요.""",
+    ),
+    MessagesPlaceholder(variable_name="history", optional=True),
+    ("human", "{user_query}")
+])

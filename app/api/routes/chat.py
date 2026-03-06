@@ -98,7 +98,7 @@ async def chat_stream(request: ChatRequest):
                     logger.info("[Stream] 라우팅 완료 | route=%s | reason=%s", route, reason)
                     yield _sse({"type": "route", "route": route, "reason": reason})
 
-                elif name == "on_chat_model_stream" and node in ("code", "infra", "dev_qa"):
+                elif name == "on_chat_model_stream" and node in ("code", "infra", "dev_qa", "unknown"):
                     chunk = event.get("data", {}).get("chunk")
                     if chunk and chunk.content:
                         logger.info("[Stream]: %s", chunk.content)
