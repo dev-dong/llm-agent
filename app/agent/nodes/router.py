@@ -18,7 +18,7 @@ async def router_node(state: AgentState) -> dict:
 
     try:
         decision: RouterDecision = await chain.ainvoke({
-            "user_query": state.router_query or state.user_query,
+            "user_query": state.user_query,
             "history": build_history(state.history, state.summary)
         })
         logger.info("[Router] 결정 | route=%s", decision.route)

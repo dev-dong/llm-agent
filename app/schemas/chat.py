@@ -30,3 +30,14 @@ class RouteEvent(BaseModel):
     """라우터 노드 결과 이벤트."""
     route: Literal["code", "infra", "dev_qa", "unknown"]
     reason: str
+
+
+class SummarizeRequest(BaseModel):
+    """Spring이 요약 요청 시 전달하는 데이터"""
+    history: list[MessageItem]
+    current_summary: str = Field(default="", description="기존 요약본 (있으면 합쳐서 요약)")
+
+
+class SummarizeResponse(BaseModel):
+    """요약 결과 반환."""
+    summary: str

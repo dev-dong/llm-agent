@@ -6,7 +6,8 @@ from fastapi.responses import StreamingResponse
 
 from app.agent.graph import get_graph
 from app.agent.state import AgentState
-from app.schemas.chat import InvokeRequest
+from app.core.llm import LLMFactory
+from app.schemas.chat import InvokeRequest, SummarizeResponse, SummarizeRequest
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -59,6 +60,27 @@ async def chat_stream(request: InvokeRequest):
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@router.post("/summarize", response_model=SummarizeResponse, summary="대화 요약 생성")
+async def summarize(request: SummarizeRequest) -> SummarizeResponse:
+    """단 하나의 책임: LLM으로 대화 요약 생성 후 반환."""
+    llm = LLMFactory.get_general_llm()
+
+    history_text = "\n".join(f"{item.role.upper()}: {item.content[:200]}" for item in request.history)
+
+    prompt = f"""다음 대화를 5문장 이내로 요약해줘.
+코드, 에러, 해결책이 있으면 반드시 포함해줘.
+기존 요약이 있으면 합쳐서 작성해줘.
+
+기존 요약:
+{request.current_summary if request.current_summary else "없음"}
+
+대화:
+{history_text}
+"""
+    response = await llm.ainvoke(prompt)
+    return SummarizeResponse(summary=response.content)
 
 
 def _sse(data: dict) -> str:
