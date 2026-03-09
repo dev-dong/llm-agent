@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.agent.graph import get_graph
-from app.api.routes import chat
+from app.api.routes import invoke
 from app.core.config import get_settings
 
 logging.basicConfig(
@@ -50,7 +50,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    fast_api_app.include_router(chat.router, prefix="/api/v1")
+    fast_api_app.include_router(invoke.router, prefix="/api/v1")
     fast_api_app.mount("/static", StaticFiles(directory="."), name="static")
 
     @fast_api_app.get("/")
