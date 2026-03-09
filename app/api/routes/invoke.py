@@ -16,7 +16,7 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 async def chat_stream(request: InvokeRequest):
     graph = get_graph()
     summary = request.summary
-    history = request.history
+    history = [h.model_dump() for h in request.history]
 
     async def event_generator():
         try:

@@ -3,8 +3,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 
 from app.agent.graph import get_graph
 from app.api.routes import invoke
@@ -38,25 +36,19 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     fast_api_app = FastAPI(
-        title="내부망 LLM Agent",
+        title="내부망 LLM Agent Engine",
         version="1.0.0",
-        lifespan=lifespan,
+        lifespan=lifespan
     )
 
     fast_api_app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
         allow_methods=["*"],
-        allow_headers=["*"],
+        allow_headers=["*"]
     )
 
     fast_api_app.include_router(invoke.router, prefix="/api/v1")
-    fast_api_app.mount("/static", StaticFiles(directory="."), name="static")
-
-    @fast_api_app.get("/")
-    async def serve_ui():
-        return FileResponse("llm-agent-ui.html")
-
     return fast_api_app
 
 

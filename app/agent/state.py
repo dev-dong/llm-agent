@@ -1,6 +1,7 @@
 from typing import Annotated, Literal
-from langgraph.graph.message import add_messages
+
 from langchain_core.messages import BaseMessage
+from langgraph.graph.message import add_messages
 from pydantic import BaseModel, Field
 
 NodeType = Literal["code", "infra", "dev_qa", "unknown"]
@@ -9,7 +10,6 @@ NodeType = Literal["code", "infra", "dev_qa", "unknown"]
 class AgentState(BaseModel):
     messages: Annotated[list[BaseMessage], add_messages] = Field(default_factory=list)
     user_query: str = Field(default="")
-    router_query: str = Field(default="")
     history: list[dict] = Field(default_factory=list)
     summary: str = Field(default="", description="이전 대화 요약본")
     route: NodeType = Field(default="unknown")
