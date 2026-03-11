@@ -15,10 +15,20 @@ async def code_node(state: AgentState) -> dict:
 
     chain = CODE_PROMPT | LLMFactory.get_code_llm()
 
+    code_context = ""
+    if state.code_snapshot:
+        code_context = (
+            "\n\n## 현재 작업 중인 코드\n"
+            "아래는 사용자가 작업 중인 최신 코드입니다. "
+            "질문에 이 코드가 관련되면 참고하세요.\n"
+            f"```\n{state.code_snapshot}\n```"
+        )
+
     try:
         response = await chain.ainvoke({
             "user_query": state.user_query,
-            "history": build_history(state.history, state.summary)
+            "history": build_history(state.history, state.summary),
+            "code_context": code_context
         })
         logger.info("[Code] 완료 | length=%d", len(response.content))
         return {

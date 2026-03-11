@@ -14,16 +14,10 @@ class MessageItem(BaseModel):
 
 
 class InvokeRequest(BaseModel):
-    """AI 엔진 실행 요청.
-
-    Spring이 비즈니스 로직을 처리한 뒤 AI 엔진에 전달하는 계약.
-    - query   : 파일 내용이 포함된 완성된 질문 (Spring이 조합)
-    - history : 코드 스냅샷이 제거된 순수 텍스트 히스토리 (Spring이 정리)
-    - summary : 이전 대화 요약본 (Spring이 관리)
-    """
     query: str = Field(min_length=1, max_length=20000)
     history: list[MessageItem] = Field(default_factory=list)
     summary: str = Field(default="", description="이전 대화 요약본 (Spring 관리)")
+    code_snapshot: str = Field(default="", description="Spring이 판단해서 넣어주는 코드 스냅샷")
 
 
 class RouteEvent(BaseModel):

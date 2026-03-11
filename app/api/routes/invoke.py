@@ -25,7 +25,8 @@ async def chat_stream(request: InvokeRequest):
                     AgentState(
                         user_query=request.query,
                         history=history,
-                        summary=summary
+                        summary=summary,
+                        code_snapshot=request.code_snapshot
                     ),
                     version="v2",
             ):

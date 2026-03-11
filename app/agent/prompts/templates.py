@@ -52,7 +52,7 @@ CODE_PROMPT = ChatPromptTemplate.from_messages([
 ## 추가 규칙
 - 불확실한 전제는 단정하지 말고 명시하세요.
 - 요청이 리뷰/디버깅이면 원인과 수정 포인트를 우선 설명하세요.
-"""
+{code_context}"""
     ),
     MessagesPlaceholder(variable_name="history", optional=True),
     ("human", "{user_query}")

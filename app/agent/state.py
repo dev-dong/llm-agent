@@ -16,6 +16,7 @@ class AgentState(BaseModel):
     routing_reason: str = Field(default="")
     final_answer: str = Field(default="")
     error: str | None = Field(default=None)
+    code_snapshot: str = Field(default="", description="Spring이 전달한 코드 스냅샷")
 
 
 class RouterDecision(BaseModel):
